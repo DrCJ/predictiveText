@@ -69,18 +69,18 @@ class PrefixTree extends PrefixTreeNode {
     const addWordHelper = (node, str) => {
 
       var c = str[0];
-      var child = node.children[c] || new PrefixTreeNode(c);
+      var children = node.children[c] || new PrefixTreeNode(c);
+      node.children[c] = children;
 
       if (str.length === 1) {
-        child.endWord = child.endWord || {};
-        child.endWord[fullname] = rank;
+        children[c].endWord = children[c].endWord || {};
+        children[c].endWord[fullname] = rank;
       }
 
       if (str.length > 1) {
-        addWordHelper(child, str.slice(1));
+        addWordHelper(children[c], str.slice(1));
       }
     };
-    
     addWordHelper(this, name);
   }
 
