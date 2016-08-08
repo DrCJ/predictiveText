@@ -54,7 +54,7 @@
 class PrefixTreeNode {
   constructor(value) {
     this.children = {};
-    this.endWord = null;  //this is truthy (sorted array) if the node is the last character of a string 
+    this.endWord = null;  //this is truthy (sorted array) if the node is the last character of a string
     this.value = value;
   }
 }
@@ -64,40 +64,32 @@ class PrefixTree extends PrefixTreeNode {
     super(null);
   }
 
-  addWord(string, rank, value) {
+  addWord(name, rank, fullname) {
+
     const addWordHelper = (node, str) => {
-      // var currentChar = node.children[str[0]];
-      if (!node.children[str[0]]) {
-        node.children[str[0]] = new PrefixTreeNode(str[0]);
-        if (str.length === 1) {
-          if (node.children[str[0]].endWord) {
-            // do nothing
-          } else {
-            node.children[str[0]].endWord = {};
-          }
-          node.children[str[0]].endWord[value] = rank;
-        }
+
+      var children = node.children;
+      var c = str[0];
+
+      if (!children[c]) {
+        children[c] = new PrefixTreeNode(c);
       } else {
-        //word to this point exists.. add for duplicate names
         if (str.length === 1) {
-          node.children[str[0]].endWord[value] = rank;
+          children[c].endWord = {};
+          children[c].endWord[fullname] = rank;
+        } else {
+          addWordHelper(children[c], str.slice(1));
         }
-      }
-      if (str.length > 1) {
-        addWordHelper(node.children[str[0]], str.slice(1));
       }
     };
-    addWordHelper(this, string);
+
+    addWordHelper(this, name);
   }
 
-  addName(string, rank) {
-    var names = string.split(' ');
+  addName(fullname, rank) {
+    var names = fullname.split(' ');
     var that = this;
-    names.forEach(name => that.addWord(name, rank, string));
-  }
-
-  removeWord(string) {
-    //seems like this is not needed
+    names.forEach(name => that.addWord(name, rank, fullname));
   }
 
   predictWord(string) {
@@ -111,7 +103,7 @@ class PrefixTree extends PrefixTreeNode {
     };
 
     var allWords = [];
-    
+
     var allWordsHelper = function(stringSoFar, tree) {
       for (let k in tree.children) {
         const child = tree.children[k]
@@ -142,7 +134,7 @@ class PrefixTree extends PrefixTreeNode {
     };
 
     var allNames = {};
-    
+
     var allNamesHelper = function(stringSoFar, tree) {
       for (let k in tree.children) {
         const child = tree.children[k]
