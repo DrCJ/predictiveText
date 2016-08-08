@@ -22,7 +22,7 @@
 //     this._storage = [];
 //   }
 
-//   insert({name, rank, pointer}) {
+//   insert({name, rank, endWord}) {
 //     var names = name.split(' ');
 //     var first, last, suffix;
 //     if (names[0]) { first = names[0]; }
@@ -54,7 +54,7 @@
 class PrefixTreeNode {
   constructor(value) {
     this.children = {};
-    this.pointer = null;  //this is truthy (sorted array) if the node is the last character of a string 
+    this.endWord = null;  //this is truthy (sorted array) if the node is the last character of a string 
     this.value = value;
   }
 }
@@ -64,17 +64,24 @@ class PrefixTree extends PrefixTreeNode {
     super(null);
   }
 
-  addWord(string, rank) {
+  addWord(string, rank, value) {
     const addWordHelper = (node, str) => {
+      // var currentChar = node.children[str[0]];
       if (!node.children[str[0]]) {
         node.children[str[0]] = new PrefixTreeNode(str[0]);
         if (str.length === 1) {
-
-          node.children[str[0]].pointer = rank || 1;
+          if (node.children[str[0]].endWord) {
+            // do nothing
+          } else {
+            node.children[str[0]].endWord = {};
+          }
+          node.children[str[0]].endWord[value] = rank;
         }
       } else {
-        //word to this point exists.. check for duplicate names?
-
+        //word to this point exists.. add for duplicate names
+        if (str.length === 1) {
+          node.children[str[0]].endWord[value] = rank;
+        }
       }
       if (str.length > 1) {
         addWordHelper(node.children[str[0]], str.slice(1));
@@ -86,7 +93,7 @@ class PrefixTree extends PrefixTreeNode {
   addName(string, rank) {
     var names = string.split(' ');
     var that = this;
-    names.forEach(name => that.addWord(name, rank));
+    names.forEach(name => that.addWord(name, rank, string));
   }
 
   removeWord(string) {
@@ -96,7 +103,7 @@ class PrefixTree extends PrefixTreeNode {
   predictWord(string) {
     var getRemainingTree = function(string, tree) {
       var node = tree;
-      while (string) {
+      while (string && node) {
         node = node.children[string[0]];
         string = string.substr(1);
       }
@@ -109,7 +116,7 @@ class PrefixTree extends PrefixTreeNode {
       for (let k in tree.children) {
         const child = tree.children[k]
         var newString = stringSoFar + child.value;
-        if (child.pointer) {
+        if (child.endWord) {
           allWords.push(newString);
         }
         allWordsHelper(newString, child);
@@ -124,24 +131,80 @@ class PrefixTree extends PrefixTreeNode {
     return allWords;
   }
 
+  predictName(string) {
+    var getRemainingTree = function(string, tree) {
+      var node = tree;
+      while (string && node) {
+        node = node.children[string[0]];
+        string = string.substr(1);
+      }
+      return node;
+    };
+
+    var allNames = {};
+    
+    var allNamesHelper = function(stringSoFar, tree) {
+      for (let k in tree.children) {
+        const child = tree.children[k]
+        var newString = stringSoFar + child.value;
+        if (child.endWord) {
+          console.log('endWord:', child.endWord);
+          allNames = Object.assign(allNames, child.endWord);
+        }
+        allNamesHelper(newString, child);
+      }
+    };
+
+    var remainingTree = getRemainingTree(string, this);
+    if (remainingTree) {
+      allNamesHelper(string, remainingTree);
+    }
+
+    return allNames;
+  }
+
   logAllWords() {
     console.log('------ ALL WORDS IN PREFIX TREE -----------')
     console.log(this.predictWord(''));
+  }
+
+  logAllWords() {
+    console.log('------ ALL NAMES IN PREFIX TREE -----------')
+    console.log(this.predictName(''));
   }
 }
 
 
 var tree = new PrefixTree();
-tree.addWord('pizza');
-tree.addWord('picasso');
-tree.addWord('bread');
-tree.addWord('apple');
-tree.addWord('pie');
-
-tree.addName('Antonio Brown');
-tree.addName('Carmelo Anthony');
+// tree.addWord('pizza');
+// tree.addWord('picasso');
+// tree.addWord('bread');
+// tree.addWord('apple');
+// tree.addWord('pie');
 
 
-console.log('All words starting with pi', tree.predictWord('pi'));
-console.log('All words starting with Ant', tree.predictWord('Ant'));
-tree.logAllWords();
+const dummyRankedList = [
+  'Antonio Brown',
+  'Tom Brady',
+  'Andrew Luck',
+  'Aaron Rodgers',
+  'Todd Gurley',
+  'Jay Cutler',
+  'Ryan Fitzpatrick',
+  'Matt Ryan',
+  'Ryan Matthews',
+  'Julio Jones',
+  'James Jones'
+]
+
+dummyRankedList.forEach((name, i) => {
+  tree.addName(name, i + 1);
+});
+
+// tree.addName('Antonio Brown', 1);
+// tree.addName('Carmelo Anthony', 7);
+
+
+// console.log('All words starting with Ant', tree.predictName('Ant'));
+console.log('All words starting with Rya', tree.predictName('Rya'));
+// tree.logAllWords();
