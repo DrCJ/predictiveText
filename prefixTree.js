@@ -1,56 +1,3 @@
-
-
-
-// NEEDS TO BE IMPLMENTED TO RETURN NAMES SORTED BY RANK
-
-// class LinkedListNode {
-//   constructor(value) {
-//     this.value = value;
-//     this.next = null;
-//   }
-// }
-
-// class LinkedList {
-//   constructor() {
-//     this.head = null;
-//     this.tail = null;
-//   }
-// }
-
-// class sortedNames {
-//   constructor() {
-//     this._storage = [];
-//   }
-
-//   insert({name, rank, endWord}) {
-//     var names = name.split(' ');
-//     var first, last, suffix;
-//     if (names[0]) { first = names[0]; }
-//     if (names[1]) { last = names[1]; }
-//     if (names[2]) { suffix = names[2]; }
-
-//     this._storage.push({first, last, suffix, rank});
-
-//     //TO DO - USE BINARY SEARCH TO FIND THE CORRECT INDEX TO INSERT BASED ON RANK
-//     //SPLICE IN THE NEW ITEM TO STORAGE
-
-//     // if (this._storage.length === 0) { this._storage.push({first, last, suffix, rank}); }
-//     //insert into a sortedArray using binarySearch
-//   }
-
-//   binarySearch(rank) {
-//     //TO BE IMPLEMENTED LATER
-
-//     // var left = -1;
-//     // var right = this._storage.length;
-//     // var mid = Math.floor(right - left * 0.5);
-//   }
-
-//   getStorage() {
-//     return this._storage;
-//   }
-// }
-
 class PrefixTreeNode {
   constructor(value) {
     this.children = {};
@@ -65,7 +12,6 @@ class PrefixTree extends PrefixTreeNode {
   }
 
   addWord(name, rank, fullname) {
-
     const addWordHelper = (node, str) => {
 
       var c = str[0];
@@ -73,12 +19,12 @@ class PrefixTree extends PrefixTreeNode {
       node.children[c] = children;
 
       if (str.length === 1) {
-        children[c].endWord = children[c].endWord || {};
-        children[c].endWord[fullname] = rank;
+        children.endWord = children.endWord || {};
+        children.endWord[fullname] = rank;
       }
 
       if (str.length > 1) {
-        addWordHelper(children[c], str.slice(1));
+        addWordHelper(children, str.slice(1));
       }
     };
     addWordHelper(this, name);
@@ -88,37 +34,6 @@ class PrefixTree extends PrefixTreeNode {
     var names = fullname.split(' ');
     var that = this;
     names.forEach(name => that.addWord(name, rank, fullname));
-  }
-
-  predictWord(string) {
-    var getRemainingTree = function(string, tree) {
-      var node = tree;
-      while (string && node) {
-        node = node.children[string[0]];
-        string = string.substr(1);
-      }
-      return node;
-    };
-
-    var allWords = [];
-
-    var allWordsHelper = function(stringSoFar, tree) {
-      for (let k in tree.children) {
-        const child = tree.children[k]
-        var newString = stringSoFar + child.value;
-        if (child.endWord) {
-          allWords.push(newString);
-        }
-        allWordsHelper(newString, child);
-      }
-    };
-
-    var remainingTree = getRemainingTree(string, this);
-    if (remainingTree) {
-      allWordsHelper(string, remainingTree);
-    }
-
-    return allWords;
   }
 
   predictName(string) {
@@ -133,34 +48,41 @@ class PrefixTree extends PrefixTreeNode {
 
     var allNames = {};
 
-    var allNamesHelper = function(stringSoFar, tree) {
-      for (let k in tree.children) {
-        const child = tree.children[k]
-        var newString = stringSoFar + child.value;
+    var allNamesHelper = function(tree) {
+      var children = tree.children;
+
+      for (let key in children) {
+        const child = children[key];
+
         if (child.endWord) {
-          console.log('endWord:', child.endWord);
           allNames = Object.assign(allNames, child.endWord);
         }
-        allNamesHelper(newString, child);
+
+        allNamesHelper(child);
       }
     };
 
     var remainingTree = getRemainingTree(string, this);
     if (remainingTree) {
-      allNamesHelper(string, remainingTree);
+      allNamesHelper(remainingTree);
     }
 
-    return allNames;
-  }
+    var sortedNames = [];
+    for(let key in allNames) {
+      sortedNames.push({key: key, rank: allNames[key]});
+    }
 
-  logAllWords() {
-    console.log('------ ALL WORDS IN PREFIX TREE -----------')
-    console.log(this.predictWord(''));
-  }
+    sortedNames.sort(function(a, b) {
+      if(a.rank > b.rank) {
+        return 1;
+      } else if(a.rank < b.rank) {
+        return -1;
+      }
 
-  logAllWords() {
-    console.log('------ ALL NAMES IN PREFIX TREE -----------')
-    console.log(this.predictName(''));
+      return 0;
+    });
+
+    return sortedNames;
   }
 }
 
@@ -174,7 +96,6 @@ var tree = new PrefixTree();
 
 
 const dummyRankedList = [
-  'Antonio Brown',
   'Tom Brady',
   'Andrew Luck',
   'Aaron Rodgers',
@@ -184,7 +105,8 @@ const dummyRankedList = [
   'Matt Ryan',
   'Ryan Matthews',
   'Julio Jones',
-  'James Jones'
+  'James Jones',
+  'Antonio Brown',
 ]
 
 dummyRankedList.forEach((name, i) => {
